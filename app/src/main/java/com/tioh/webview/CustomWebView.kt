@@ -5,10 +5,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Build
 import android.util.AttributeSet
-import android.webkit.WebChromeClient
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.*
+import androidx.appcompat.app.AlertDialog
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -18,7 +16,7 @@ class CustomWebView(context: Context, attrs: AttributeSet?) : WebView(context, a
 
     init {
         this.webViewClient = CustomWebViewClient()
-        this.webChromeClient = CustomWebChromeClient()
+        this.webChromeClient = CustomWebChromeClient(context)
         settings.apply {
             javaScriptEnabled = true
             setSupportMultipleWindows(true)
@@ -57,7 +55,46 @@ class CustomWebView(context: Context, attrs: AttributeSet?) : WebView(context, a
         }
     }
 
-    inner class CustomWebChromeClient: WebChromeClient() {
+    inner class CustomWebChromeClient(private var context: Context): WebChromeClient() {
+        override fun onJsAlert(
+            view: WebView?,
+            url: String?,
+            message: String?,
+            result: JsResult?
+        ): Boolean {
+            AlertDialog.Builder(context)
+                .setTitle(null)
+                .setMessage(message)
+                .setPositiveButton(R.string.confirm) { _, _ ->
+                    result?.confirm()
+                }
+                .setCancelable(false)
+                .create()
+                .show()
+            return true
+        }
 
+        override fun onJsConfirm(
+            view: WebView?,
+            url: String?,
+            message: String?,
+            result: JsResult?
+        ): Boolean {
+            AlertDialog.Builder(context)
+                .setTitle(null)
+                .setMessage(message)
+                .setPositiveButton(R.string.confirm) { _, _ ->
+                    result?.confirm()
+                }
+                .setNegativeButton(R.string.cancel) { _, _ ->
+                    result?.cancel()
+                }
+                .setOnDismissListener {
+                    result?.cancel()
+                }
+                .create()
+                .show()
+            return true
+        }
     }
 }
